@@ -6,9 +6,6 @@ services:
     restart: always
     environment:
       MYSQL_ROOT_PASSWORD: secret
-      MYSQL_DATABASE: cms
-      MYSQL_USER: cmsadmin
-      MYSQL_PASSWORD: scret
     ports:
       - 3306:3306
   adminer:
