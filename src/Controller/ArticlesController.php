@@ -14,7 +14,8 @@ class ArticlesController extends AppController
 
     public function view($slug = null)
     {
-        $article = $this->Articles->findBySlug($slug)->firstOrFail();
+        $article = $this->Articles->findBySlug($slug)->contain(['Tags'])
+            ->firstOrFail();
         $this->set(compact('article'));
     }
 
@@ -24,8 +25,6 @@ class ArticlesController extends AppController
         if ($this->request->is('post')) {
             $article = $this->Articles->patchEntity($article, $this->request->getData());
 
-            // Hardcoding the user_id is temporary, and will be removed later
-            // when we build authentication out.
             $article->user_id = 1;
 
             if ($this->Articles->save($article)) {
@@ -34,12 +33,17 @@ class ArticlesController extends AppController
             }
             $this->Flash->error(__('Unable to add your article.'));
         }
+
+        $tags = $this->Articles->Tags->find('list');
+        $this->set('tags', $tags);
+
         $this->set('article', $article);
     }
 
     public function edit($slug)
     {
-        $article = $this->Articles->findBySlug($slug)->firstOrFail();
+        $article = $this->Articles->findBySlug($slug)->contain(['Tags'])
+            ->firstOrFail();
         if ($this->request->is(['post', 'put'])) {
             $this->Articles->patchEntity($article, $this->request->getData());
             if ($this->Articles->save($article)) {
@@ -48,6 +52,9 @@ class ArticlesController extends AppController
             }
             $this->Flash->error(__('Unable to update your article.'));
         }
+
+        $tags = $this->Articles->Tags->find('list');
+        $this->set('tags', $tags);
 
         $this->set('article', $article);
     }
@@ -61,5 +68,17 @@ class ArticlesController extends AppController
             $this->Flash->success(__('The {0} article has been deleted.', $article->title));
             return $this->redirect(['action' => 'index']);
         }
-        }
+    }
+
+    public function tags(...$tags)
+    {
+        $articles = $this->Articles->find('tagged', [
+             'tags' => $tags
+        ]);
+
+        $this->set([
+            'articles' => $articles,
+            'tags' => $tags
+        ]);
+    }
 }
